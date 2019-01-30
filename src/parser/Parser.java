@@ -1,9 +1,6 @@
 package parser;
 
-import parser.ast.BinaryExpression;
-import parser.ast.Expression;
-import parser.ast.NumberExpression;
-import parser.ast.UnaryExpression;
+import parser.ast.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +18,35 @@ public class Parser {
         this.size = tokens.size();
     }
 
-    public List<Expression> parse() {
-        List<Expression> result = new ArrayList<>();
+    public List<Statement> parse() {
+        List<Statement> result = new ArrayList<>();
 
         while (!this.match(TokenType.EOF)) {
-            result.add(this.expression());
+            result.add(this.statement());
         }
 
         return result;
+    }
+
+    private Statement statement() {
+        if (this.match(TokenType.PRINT)){
+            return new PrintStatement(this.expression());
+        }
+
+        return this.assignmentStatement();
+    }
+
+    private Statement assignmentStatement() {
+        Token current = this.get(0);
+
+        if (this.match(TokenType.WORD) && get(0).getType() == TokenType.EQ) {
+            String variable = current.getText();
+            this.consume(TokenType.EQ);
+
+            return new AssignmentStatement(variable, this.expression());
+        }
+
+        throw new RuntimeException("Unknown operator");
     }
 
     private Expression expression() {
@@ -73,8 +91,7 @@ public class Parser {
         return result;
     }
 
-    private Expression power()
-    {
+    private Expression power() {
         Expression result = this.unary();
 
         while (true) {
@@ -104,6 +121,10 @@ public class Parser {
             return new NumberExpression(Double.parseDouble(current.getText()));
         }
 
+        if (this.match(TokenType.WORD)) {
+            return new VariableExpression(current.getText());
+        }
+
         if (this.match(TokenType.LPAREN)) {
             Expression result = this.expression();
             this.match(TokenType.RPAREN);
@@ -123,7 +144,18 @@ public class Parser {
 
         this.position++;
         return true;
+    }
 
+    private Token consume(TokenType type) {
+        Token current = this.get(0);
+
+        if (current.getType() != type) {
+            throw new RuntimeException("Token " + current + " does'n match " + type);
+        }
+
+        this.position++;
+
+        return current;
     }
 
     private Token get(int relativePosition) {

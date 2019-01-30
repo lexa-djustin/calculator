@@ -35,6 +35,6 @@ public class BinaryExpression implements Expression {
 
     @Override
     public String toString() {
-        return String.format("%s %c %s", this.expr1, this.operation, this.expr2);
+        return String.format("[%s %c %s]", this.expr1, this.operation, this.expr2);
     }
 }

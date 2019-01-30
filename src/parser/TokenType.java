@@ -8,8 +8,13 @@ public enum TokenType {
     STAR,
     SLASH,
 
+    PRINT,
+
     LPAREN,
     RPAREN,
+
+    WORD,
+    EQ,
 
     POW,
 

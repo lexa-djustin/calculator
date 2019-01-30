@@ -5,13 +5,14 @@ import java.util.List;
 
 public class Lexer {
 
-    private static final String OPERATOR_CHARS = "+-*/()^";
+    private static final String OPERATOR_CHARS = "+-*/()^=";
 
     private static final TokenType[] OPERATOR_TOKENS = {
             TokenType.PLUS, TokenType.MINUS,
             TokenType.STAR, TokenType.SLASH,
             TokenType.LPAREN, TokenType.RPAREN,
             TokenType.POW,
+            TokenType.EQ,
     };
 
     private String input;
@@ -32,6 +33,8 @@ public class Lexer {
 
             if (Character.isDigit(current)) {
                 this.tokenizeNumber();
+            } else if (Character.isLetter(current)) {
+                this.tokenizeWord();
             } else if (OPERATOR_CHARS.indexOf(current) != -1) {
                 this.tokenizeOperator();
             } else {
@@ -46,12 +49,40 @@ public class Lexer {
         char current = this.peek(0);
         StringBuilder buffer = new StringBuilder();
 
-        while (Character.isDigit(current)) {
+        while (true) {
+            if (current == '.') {
+                if (buffer.indexOf(".") > -1) {
+                    throw new RuntimeException("Invalid float number");
+                }
+            } else if (!Character.isDigit(current)) {
+                break;
+            }
+
             buffer.append(current);
             current = this.next();
         }
 
         this.addToken(TokenType.NUMBER, buffer.toString());
+    }
+
+    private void tokenizeWord() {
+        char current = this.peek(0);
+        StringBuilder buffer = new StringBuilder();
+
+        while (true) {
+            if (!Character.isLetter(current) && !Character.isDigit(current) && current != '_') {
+                break;
+            }
+
+            buffer.append(current);
+            current = this.next();
+        }
+
+        if (buffer.toString().equals("print")) {
+            this.addToken(TokenType.PRINT);
+        } else {
+            this.addToken(TokenType.WORD, buffer.toString());
+        }
     }
 
     private void tokenizeOperator() {
